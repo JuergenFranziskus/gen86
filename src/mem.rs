@@ -35,6 +35,10 @@ impl<'a> Mem<'a> {
         self.index = Some((index, scale));
         self
     }
+    pub fn labeled(mut self, label: &'a str) -> Self {
+        self.label = Some(label);
+        self
+    }
 }
 impl<'a> Add<Reg> for Mem<'a> {
     type Output = Self;
@@ -76,7 +80,7 @@ impl<'a> Add<i8> for Mem<'a> {
 impl<'a> Add<u64> for Mem<'a> {
     type Output = Self;
     fn add(mut self, rhs: u64) -> Self::Output {
-        self.offset += self.offset.wrapping_add_unsigned(rhs);
+        self.offset = self.offset.wrapping_add_unsigned(rhs);
         self
     }
 }

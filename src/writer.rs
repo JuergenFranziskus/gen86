@@ -7,6 +7,12 @@ pub trait X86Writer {
     fn label(&mut self, label: &str) -> io::Result<()>;
     fn global(&mut self, label: &str) -> io::Result<()>;
     fn text(&mut self) -> io::Result<()>;
+    fn rodata(&mut self) -> io::Result<()>;
+    fn blank(&mut self) -> io::Result<()>;
+    fn comment(&mut self, comment: &str) -> io::Result<()>;
+
+    fn db(&mut self, label: &str, bytes: &[&[u8]]) -> io::Result<()>;
+    fn equ(&mut self, label: &str, value: i64) -> io::Result<()>;
 
     fn adc<'a, 'b>(
         &mut self,
@@ -123,6 +129,7 @@ pub trait X86Writer {
         rd: impl Into<Operand<'a>>,
         rs: impl Into<Operand<'b>>,
     ) -> io::Result<()>;
+    fn setcc<'a>(&mut self, cc: Condition, dst: impl Into<Operand<'a>>) -> io::Result<()>;
     fn shl<'a, 'b>(
         &mut self,
         rd: impl Into<Operand<'a>>,
@@ -189,4 +196,36 @@ pub enum Condition {
     PO,
     S,
     Z,
+}
+impl Condition {
+    pub fn signed_equivalent(self) -> Self {
+        use Condition::*;
+        match self {
+            A => G,
+            AE => GE,
+            B => L,
+            BE => LE,
+            NA => NG,
+            NAE => NGE,
+            NB => NL,
+            NBE => NLE,
+
+            _ => self,
+        }
+    }
+    pub fn unsigned_equivalent(self) -> Self {
+        use Condition::*;
+        match self {
+            G => A,
+            GE => AE,
+            L => B,
+            LE => BE,
+            NG => NA,
+            NGE => NAE,
+            NL => NB,
+            NLE => NBE,
+            
+            _ => self,
+        }
+    }
 }

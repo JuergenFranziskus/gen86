@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use crate::mem::Mem;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -19,6 +21,19 @@ impl Reg {
         Mem::new() + self
     }
 }
+impl Add<RSize> for Reg {
+    type Output = Self;
+    fn add(self, rhs: RSize) -> Self::Output {
+        self.name + rhs
+    }
+}
+impl Add<RName> for Reg {
+    type Output = Self;
+    fn add(self, rhs: RName) -> Self::Output {
+        self.size + rhs
+    }
+}
+
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum RName {
@@ -44,6 +59,12 @@ impl RName {
         Reg { name: self, size }
     }
 }
+impl Add<RSize> for RName {
+    type Output = Reg;
+    fn add(self, rhs: RSize) -> Self::Output {
+        self.with_size(rhs)
+    }
+}
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum RSize {
@@ -55,6 +76,12 @@ pub enum RSize {
 impl RSize {
     pub fn with_name(self, name: RName) -> Reg {
         Reg { name, size: self }
+    }
+}
+impl Add<RName> for RSize {
+    type Output = Reg;
+    fn add(self, rhs: RName) -> Self::Output {
+        self.with_name(rhs)
     }
 }
 
@@ -202,7 +229,7 @@ pub const R8W: Reg = Reg {
     name: RName::R8,
     size: RSize::Word,
 };
-pub const R8L: Reg = Reg {
+pub const R8D: Reg = Reg {
     name: RName::R8,
     size: RSize::DWord,
 };
@@ -219,7 +246,7 @@ pub const R9W: Reg = Reg {
     name: RName::R9,
     size: RSize::Word,
 };
-pub const R9L: Reg = Reg {
+pub const R9D: Reg = Reg {
     name: RName::R9,
     size: RSize::DWord,
 };
@@ -236,7 +263,7 @@ pub const R10W: Reg = Reg {
     name: RName::R10,
     size: RSize::Word,
 };
-pub const R10L: Reg = Reg {
+pub const R10D: Reg = Reg {
     name: RName::R10,
     size: RSize::DWord,
 };
@@ -253,7 +280,7 @@ pub const R11W: Reg = Reg {
     name: RName::R11,
     size: RSize::Word,
 };
-pub const R11L: Reg = Reg {
+pub const R11D: Reg = Reg {
     name: RName::R11,
     size: RSize::DWord,
 };
@@ -270,7 +297,7 @@ pub const R12W: Reg = Reg {
     name: RName::R12,
     size: RSize::Word,
 };
-pub const R12L: Reg = Reg {
+pub const R12D: Reg = Reg {
     name: RName::R12,
     size: RSize::DWord,
 };
@@ -287,7 +314,7 @@ pub const R13W: Reg = Reg {
     name: RName::R13,
     size: RSize::Word,
 };
-pub const R13L: Reg = Reg {
+pub const R13D: Reg = Reg {
     name: RName::R13,
     size: RSize::DWord,
 };
@@ -304,7 +331,7 @@ pub const R14W: Reg = Reg {
     name: RName::R14,
     size: RSize::Word,
 };
-pub const R14L: Reg = Reg {
+pub const R14D: Reg = Reg {
     name: RName::R14,
     size: RSize::DWord,
 };
@@ -321,7 +348,7 @@ pub const R15W: Reg = Reg {
     name: RName::R15,
     size: RSize::Word,
 };
-pub const R15L: Reg = Reg {
+pub const R15D: Reg = Reg {
     name: RName::R15,
     size: RSize::DWord,
 };

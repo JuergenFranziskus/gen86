@@ -52,7 +52,13 @@ impl<O: Write> NasmWriter<O> {
 
         Ok(())
     }
-    fn emit_binop_cc<'a, 'b>(&mut self, name: &str, cc: Condition, rd: impl Into<Operand<'a>>, rs: impl Into<Operand<'b>>) -> io::Result<()> {
+    fn emit_binop_cc<'a, 'b>(
+        &mut self,
+        name: &str,
+        cc: Condition,
+        rd: impl Into<Operand<'a>>,
+        rs: impl Into<Operand<'b>>,
+    ) -> io::Result<()> {
         let rd = rd.into();
         let rs = rs.into();
 
@@ -75,7 +81,12 @@ impl<O: Write> NasmWriter<O> {
 
         Ok(())
     }
-    fn emit_unop_cc<'a>(&mut self, name: &str, cc: Condition, r: impl Into<Operand<'a>>) -> io::Result<()> {
+    fn emit_unop_cc<'a>(
+        &mut self,
+        name: &str,
+        cc: Condition,
+        r: impl Into<Operand<'a>>,
+    ) -> io::Result<()> {
         let r = r.into();
 
         write!(self.out, "    {name}")?;
@@ -90,7 +101,6 @@ impl<O: Write> NasmWriter<O> {
         writeln!(self.out, "    {name}")?;
         Ok(())
     }
-
 
     fn print_cc(&mut self, cc: Condition) -> io::Result<()> {
         let name = match cc {
@@ -228,36 +238,36 @@ impl<O: Write> NasmWriter<O> {
             RSP => "rsp",
             R8B => "r8b",
             R8W => "r8w",
-            R8L => "r8l",
+            R8D => "r8d",
             R8 => "r8",
             R9B => "r9b",
             R9W => "r9w",
-            R9L => "r9l",
-            R9 => "r9",
+            R9D => "r9d",
+            R9 =>  "r9",
             R10B => "r10b",
             R10W => "r10w",
-            R10L => "r10l",
-            R10 => "r10",
+            R10D => "r10d",
+            R10 =>  "r10",
             R11B => "r11b",
             R11W => "r11w",
-            R11L => "r11l",
-            R11 => "r11",
+            R11D => "r11d",
+            R11 =>  "r11",
             R12B => "r12b",
             R12W => "r12w",
-            R12L => "r12l",
-            R12 => "r12",
+            R12D => "r12d",
+            R12 =>  "r12",
             R13B => "r13b",
             R13W => "r13w",
-            R13L => "r13l",
-            R13 => "r13",
+            R13D => "r13d",
+            R13 =>  "r13",
             R14B => "r14b",
             R14W => "r14w",
-            R14L => "r14l",
-            R14 => "r14",
+            R14D => "r14d",
+            R14 =>  "r14",
             R15B => "r15b",
             R15W => "r15w",
-            R15L => "r15l",
-            R15 => "r15",
+            R15D => "r15d",
+            R15 =>  "r15",
         };
 
         write!(self.out, "{name}")?;
@@ -296,6 +306,55 @@ impl<O: Write> X86Writer for NasmWriter<O> {
 
     fn text(&mut self) -> std::io::Result<()> {
         writeln!(self.out, "section .text")?;
+
+        Ok(())
+    }
+
+    fn rodata(&mut self) -> io::Result<()> {
+        writeln!(self.out, "section .rodata")?;
+        
+        Ok(())
+    }
+
+    fn blank(&mut self) -> io::Result<()> {
+        writeln!(self.out)?;
+
+        Ok(())
+    }
+    fn comment(&mut self, comment: &str) -> io::Result<()> {
+        writeln!(self.out, "  ; {comment}")?;
+
+        Ok(())
+    }
+
+    fn db(&mut self, label: &str, bytess: &[&[u8]]) -> io::Result<()> {
+        write!(self.out, "{label} db ")?;
+        for (i, &bytes) in bytess.iter().enumerate() {
+            let last = i == bytess.len() - 1;
+            if is_ascii_printable(bytes) {
+                let str = str::from_utf8(bytes).unwrap();
+                write!(self.out, "\"{str}\"")?;
+                if !last {
+                    write!(self.out, ", ")?;
+                }
+            }
+            else {   
+                for (i, &byte) in bytes.iter().enumerate() {
+                    let last = last && i == bytes.len() - 1;
+                    write!(self.out, "{byte}")?;
+                    if !last {
+                        write!(self.out, ", ")?;
+                    }
+                }
+            }
+        }
+
+        writeln!(self.out)?;
+
+        Ok(())
+    }
+    fn equ(&mut self, label: &str, value: i64) -> io::Result<()> {
+        writeln!(self.out, "{label} equ {value}")?;
 
         Ok(())
     }
@@ -538,6 +597,10 @@ impl<O: Write> X86Writer for NasmWriter<O> {
         self.emit_binop("sbb", rd, rs)
     }
 
+    fn setcc<'a>(&mut self, cc: Condition, dst: impl Into<Operand<'a>>) -> io::Result<()> {
+        self.emit_unop_cc("set", cc, dst)
+    }
+
     fn shl<'a, 'b>(
         &mut self,
         rd: impl Into<Operand<'a>>,
@@ -593,4 +656,13 @@ impl<O: Write> X86Writer for NasmWriter<O> {
     ) -> std::io::Result<()> {
         self.emit_binop("xor", rd, rs)
     }
+}
+
+
+fn is_ascii_printable(bytes: &[u8]) -> bool {
+    for &byte in bytes {
+        if byte > 127 || byte < 32 || byte == b'"' { return false };
+    }
+
+    true
 }
